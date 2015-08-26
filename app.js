@@ -6,6 +6,7 @@ var fs = require('fs')
 	, csv = require('csv')
 	, ee = new (require("events").EventEmitter)()
 	, config = require('optimist').demand(['inputfile', 'schema']).argv
+	, _basefile = config['inputfile'].replace(path.extname(config['inputfile']), '')
 	;
 
 // TODO:
@@ -38,7 +39,7 @@ ee.on('parseCSV', function (data) {
 		};
 
 		try {
-			transform = require(config['inputfile'].replace(path.extname(config['inputfile']), '.js'));
+			transform = require(_basefile + '.js');
 		} catch (e) {}
 
 		ee.emit('preBuildXML', transform(output));
@@ -76,7 +77,17 @@ ee.on('buildXML', function (data) {
 		})
 		, marshaller = context.createMarshaller();
 
-	var doc = marshaller.marshalString(data['object']);
+	ee.emit('writeXML', marshaller.marshalDocument(data['object']));
+});
 
-	console.log(require('pretty-data').pd.xml(doc));
+ee.on('writeXML', function (data) {
+	fs.writeFile(_basefile + '.xml', data, {
+		'encoding' : 'utf8'
+	}, function (err) {
+		if (err) {
+			return console.log(err);
+		}
+
+		console.log('Done! Hakuna matata!');
+	});
 });
