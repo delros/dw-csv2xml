@@ -1,0 +1,16 @@
+<customers xmlns="http://www.demandware.com/xml/impex/customer/2006-10-31"><customer customer-no="0011222005"><profile><custom-attributes><custom-attribute attribute-id="cosmetologyLicense">[
+  {
+    "cosmetologyLicenseNumber": "K15780624",
+    "expirationDate": "20150901",
+    "state": "LA",
+    "licenseTypeId": "10",
+    "licenseTypeDescription": "FIRST LICENSE"
+  },
+  {
+    "cosmetologyLicenseNumber": "D15780624",
+    "expirationDate": "20151019",
+    "state": "LS",
+    "licenseTypeId": "11",
+    "licenseTypeDescription": "SECOND LICENSE"
+  }
+]</custom-attribute></custom-attributes></profile></customer></customers>

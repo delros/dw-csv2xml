@@ -1,5 +1,5 @@
 /**
- * @example JSON structure sample
+ * @example JSON structure sample which should be returned according to Demandware Customers XSD
  *	{
  *		'customers' : {
  *			'customer' : [{
