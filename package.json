@@ -4,7 +4,7 @@
   "description": "",
   "author": "Ernesto del Rosario <delrosario.ernesto@gmail.com>",
   "scripts": {
-    "test": "node app.js --inputfile ./test/input.csv --schema ./test/schema.xsd --transform ./test/transformer.js",
+    "test": "node app.js --inputfile ./test/input.csv --schema ./test/schema.xsd",
     "start": "node app.js"
   },
   "dependencies": {

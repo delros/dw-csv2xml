@@ -6,7 +6,6 @@ var fs = require('fs')
 	, csv = require('csv')
 	, ee = new (require("events").EventEmitter)()
 	, config = require('optimist').demand(['inputfile', 'schema']).argv
-	, csvPreProcessing = !!config['transform'] ? require(config['transform']) : function (obj) { return obj; }
 	;
 
 // TODO:
@@ -34,7 +33,15 @@ ee.on('parseCSV', function (data) {
 			return console.log(err);
 		}
 
-		ee.emit('preBuildXML', csvPreProcessing(output));
+		var transform = function (data) { 
+			return data; 
+		};
+
+		try {
+			transform = require(config['inputfile'].replace(path.extname(config['inputfile']), '.js'));
+		} catch (e) {}
+
+		ee.emit('preBuildXML', transform(output));
 	});	
 });
 
