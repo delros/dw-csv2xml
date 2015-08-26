@@ -1,8 +1,23 @@
 {
   "name": "dw-csv2xml",
-  "version": "1.0.0-alpha",
-  "description": "",
+  "version": "1.0.0",
+  "description": "The util to transform given CSV file to XML according to XSD with additional customizable transformation of parsed CSV document",
+  "keywords": [
+    "csv",
+    "xml", 
+    "jsonix",
+    "demandware"
+  ],
+  "homepage": "http://github.com/delros/dw-csv2xml",
+  "bugs": {
+    "url": "http://github.com/delros/dw-csv2xml/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/delros/dw-csv2xml.git"
+  },
   "author": "Ernesto del Rosario <delrosario.ernesto@gmail.com>",
+  "main": "app.js",
   "scripts": {
     "test": "node app.js --inputfile ./test/sample.csv --schema ./test/schema.xsd",
     "start": "node app.js"
