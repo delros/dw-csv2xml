@@ -48,19 +48,22 @@ ee.on('parseCSV', function (data) {
 
 // Validate if XSD mapping already exists or it should be generated
 ee.on('preBuildXML', function (data) {
-	fs.exists('./tmp/mapping/schema.js', function (exists) { 
+	var schemaName = path.basename(config['schema'], '.xsd')
+		, schemaPath = './tmp/mapping/' + schemaName;
+
+	fs.exists(schemaPath + '.js', function (exists) { 
 		if (exists) { 
 			return ee.emit('buildXML', {
 				'object' : data,
-				'schema' : require('./tmp/mapping/schema').schema
+				'schema' : require(schemaPath)[schemaName]
 			});
 		} 
 
-		exec('java -jar node_modules/jsonix/lib/jsonix-schema-compiler-full.jar -d tmp/mapping -p schema ' + config['schema'], function puts(error, stdout, stderr) { 
+		exec('java -jar node_modules/jsonix/lib/jsonix-schema-compiler-full.jar -d tmp/mapping -p ' + schemaName + ' ' + config['schema'], function (error, stdout, stderr) { 
 			require('sys').puts(stdout)
 			ee.emit('buildXML', {
 				'object' : data,
-				'schema' : require('./tmp/mapping/schema').schema
+				'schema' : require(schemaPath)[schemaName]
 			});
 		});
 	}); 
@@ -71,7 +74,7 @@ ee.on('buildXML', function (data) {
 	var xsd = data['schema']
 		, context = new jsonix.Context([xsd], {
 			namespacePrefixes : {
-				'http://www.demandware.com/xml/impex/customer/2006-10-31' : ''
+				'http://www.demandware.com/xml/impex/customobject/2006-10-31' : ''
 			}
 		})
 		, marshaller = context.createMarshaller();
