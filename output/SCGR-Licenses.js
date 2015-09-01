@@ -20,7 +20,9 @@ module.exports = function (data) {
 			'expirationDate' : item['LICENSE_EXP_DATE'],
 			'state' : item['LICENSE_STATE'],
 			'licenseTypeId' : item['LICENSE_TYPE'],
-			'licenseTypeDescription' : item['LICENSE_DESCR']
+			'licenseTypeDescription' : item['LICENSE_DESCR'],
+			'customerGroupId' : item['CUSTOMER_GROUP'],
+			'customerGroupDescription' : item['CUSTOMERGROUP_DESCR']
 		});
 	}
 
