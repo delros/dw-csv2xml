@@ -1,4 +1,18 @@
-module.exports = function (data) {
+module.exports.options = {
+	'csv' : {
+		'comment' : '#',
+		'delimiter' : '|',
+		'quote' : '',
+		'columns' : true
+	},
+	'xml' : {
+		'namespacePrefixes' : {
+			'http://www.demandware.com/xml/impex/customer/2006-10-31' : ''
+		}
+	}
+};
+
+module.exports.callback = function (data) {
 	var result = {
 				'customers' : {
 					'customer' : []
