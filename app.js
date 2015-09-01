@@ -5,43 +5,48 @@ var fs = require('fs')
 	, csv = require('csv')
 	, ee = new (require("events").EventEmitter)()
 	, config = require('optimist').demand(['inputfile', 'schema']).argv
+	, _started = new Date()
 	, _basefile = config['inputfile'].replace(path.extname(config['inputfile']), '')
 	;
 
-// TODO:
-// 1. Validate existense of inputfile and schema document
-// 2. Get and validate CSV pre-processor callback
-// 3. ... 
-
 // CSV initial file read action 
 fs.readFile(config['inputfile'], 'utf-8', function (err, data) {
+	var transform = {};
+
 	if (err) {
 		return console.log(err);
 	}
 
-	ee.emit('parseCSV', data);
+	try {
+		transform = require(_basefile + '.js');
+	} catch (e) {}
+
+	var options = transform['options'] || {}
+		, callback = transform['callback'] || function (data) { 
+			return data; 
+		};
+
+	ee.emit('parseCSV', {
+		'options' : options,
+		'callback' : callback,
+		'object' : data
+	});
 });
 
 // CSV parsing and control transmission
 ee.on('parseCSV', function (data) {
-	csv.parse(data, {
-		'comment' : '#',
-		'delimiter' : '|',
-		'columns' : true
-	}, function (err, output) {
+	var object = data['object'] || ''
+		, options = data['options'];
+
+	csv.parse(object, options['csv'], function (err, output) {
 		if (err) {
 			return console.log(err);
 		}
 
-		var transform = function (data) { 
-			return data; 
-		};
-
-		try {
-			transform = require(_basefile + '.js');
-		} catch (e) {}
-
-		ee.emit('preBuildXML', transform(output));
+		ee.emit('preBuildXML', {
+			'options' : options,
+			'object' : data['callback'](output)
+		});
 	});	
 });
 
@@ -54,7 +59,8 @@ ee.on('preBuildXML', function (data) {
 	fs.exists(schemaPath + '.js', function (exists) { 
 		if (exists) { 
 			return ee.emit('buildXML', {
-				'object' : data,
+				'options' : data['options'],
+				'object' : data['object'],
 				'schema' : require(schemaPath)[schemaName]
 			});
 		} 
@@ -62,7 +68,8 @@ ee.on('preBuildXML', function (data) {
 		exec('java -jar node_modules/jsonix/lib/jsonix-schema-compiler-full.jar -d tmp/mapping -p ' + schemaName + ' ' + config['schema'], function (error, stdout, stderr) { 
 			require('sys').puts(stdout)
 			ee.emit('buildXML', {
-				'object' : data,
+				'options' : data['options'],
+				'object' : data['object'],
 				'schema' : require(schemaPath)[schemaName]
 			});
 		});
@@ -72,11 +79,8 @@ ee.on('preBuildXML', function (data) {
 // XML document generation according to prepared XSD mapping
 ee.on('buildXML', function (data) {
 	var xsd = data['schema']
-		, context = new jsonix.Context([xsd], {
-			namespacePrefixes : {
-				'http://www.demandware.com/xml/impex/customobject/2006-10-31' : ''
-			}
-		})
+		, options = data['options'] || {}
+		, context = new jsonix.Context([xsd], options['xml'])
 		, marshaller = context.createMarshaller();
 
 	ee.emit('writeXML', marshaller.marshalDocument(data['object']));
@@ -86,10 +90,12 @@ ee.on('writeXML', function (data) {
 	fs.writeFile(_basefile + '.xml', data, {
 		'encoding' : 'utf8'
 	}, function (err) {
+		var execution = new Date() - _started;
+
 		if (err) {
 			return console.log(err);
 		}
 
-		console.log('Done! Hakuna matata!');
+		console.info("Done. Execution time: %dms", execution);
 	});
 });
