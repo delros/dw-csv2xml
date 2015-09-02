@@ -6,16 +6,12 @@ var fs = require('fs')
 	, ee = new (require("events").EventEmitter)()
 	, config = require('optimist').demand(['inputfile', 'schema']).argv
 	, _started = new Date()
-	, _basefile = config['inputfile'].replace(path.extname(config['inputfile']), '')
+	, _basefile = config['handler'] || config['inputfile'].replace(path.extname(config['inputfile']), '')
 	;
 
 // CSV initial file read action 
-fs.readFile(config['inputfile'], 'utf-8', function (err, data) {
+ee.on('readCSV', function (data) {
 	var transform = {};
-
-	if (err) {
-		return console.log(err);
-	}
 
 	try {
 		transform = require(_basefile + '.js');
@@ -26,10 +22,18 @@ fs.readFile(config['inputfile'], 'utf-8', function (err, data) {
 			return data; 
 		};
 
-	ee.emit('parseCSV', {
-		'options' : options,
-		'callback' : callback,
-		'object' : data
+	console.info('CSV file reading...');
+	
+	fs.readFile(config['inputfile'], 'utf-8', function (err, data) {
+		if (err) {
+			return console.log(err);
+		}
+		
+		ee.emit('parseCSV', {
+			'options' : options,
+			'callback' : callback,
+			'object' : data
+		});
 	});
 });
 
@@ -38,10 +42,14 @@ ee.on('parseCSV', function (data) {
 	var object = data['object'] || ''
 		, options = data['options'];
 
+	console.info('CSV file parsing...');
+
 	csv.parse(object, options['csv'], function (err, output) {
 		if (err) {
 			return console.log(err);
 		}
+
+		console.info('CSV handler execution...');
 
 		ee.emit('preBuildXML', {
 			'options' : options,
@@ -50,11 +58,12 @@ ee.on('parseCSV', function (data) {
 	});	
 });
 
-
 // Validate if XSD mapping already exists or it should be generated
 ee.on('preBuildXML', function (data) {
 	var schemaName = path.basename(config['schema'], '.xsd')
 		, schemaPath = './tmp/mapping/' + schemaName;
+
+	console.info('XSD schema processing...');
 
 	fs.exists(schemaPath + '.js', function (exists) { 
 		if (exists) { 
@@ -83,10 +92,14 @@ ee.on('buildXML', function (data) {
 		, context = new jsonix.Context([xsd], options['xml'])
 		, marshaller = context.createMarshaller();
 
+	console.info('XML file building...');
+
 	ee.emit('writeXML', marshaller.marshalDocument(data['object']));
 });
 
 ee.on('writeXML', function (data) {
+	console.info('XML file writing...');
+
 	fs.writeFile(_basefile + '.xml', data, {
 		'encoding' : 'utf8'
 	}, function (err) {
@@ -96,6 +109,8 @@ ee.on('writeXML', function (data) {
 			return console.log(err);
 		}
 
-		console.info("Done. Execution time: %dms", execution);
+		console.info("Done. Execution time: %ds", execution/1000);
 	});
 });
+
+ee.emit('readCSV');
